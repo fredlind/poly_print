@@ -1,6 +1,6 @@
 import numpy
 
-def rotation_matrix_from_vectors(vec1, vec2):
+def rotation_matrix_from_vectors(vec1, vec2, x=1, y=1, z=1):
     """ Find the rotation matrix that aligns vec1 to vec2
     :param vec1: A 3d "source" vector
     :param vec2: A 3d "destination" vector
@@ -15,4 +15,10 @@ def rotation_matrix_from_vectors(vec1, vec2):
         return numpy.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
 
     else:
-        return numpy.eye(3) #cross of all zeros only occurs on identical directions
+        if x:
+            return numpy.eye(3) #cross of all zeros only occurs on identical directions
+        else:
+            rot = numpy.eye(3)
+            c = numpy.dot(a, b)
+            rot[1, 1] = numpy.sign(c)
+            return rot

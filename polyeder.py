@@ -72,8 +72,9 @@ class Polyeder():
         #target *= l / np.linalg.norm(target)
         #target[1] = l #np.sign(target[1]) * target[1]
         #print('target: ', target, vect_to_rotate)
-        r_mat = rot_mat(vect_to_rotate, target)
+        r_mat = rot_mat(vect_to_rotate, target, x=0)
         coordinates = np.matmul(r_mat, coordinates.transpose()).transpose()
+    
         #print("Transformed coordinates:")
         #print(coordinates)
         #print("-------------------")
@@ -109,27 +110,82 @@ class Polyeder():
         diff_coord = coord2 - coord1
 
         r_mat = rot_mat(diff_coord, diff_fixed_coord)
-        self.projected_coordinates[facet] -= coord1 - fixed_coord1
-        self.projected_coordinates[facet] = np.matmul(r_mat, self.projected_coordinates[facet].transpose()).transpose()
+        print(r_mat)
+        self.projected_coordinates[facet] -= coord1
+        self.projected_coordinates[facet] = np.matmul(r_mat, self.projected_coordinates[facet].transpose()).transpose() + fixed_coord1
+
+    def map_order(self, tree):
+        n = tree.shape[0]
+        connected = []
+        mapped = []
+        connections = []
+        for i_node, node in enumerate(tree):
+            if not np.sum(node):
+                connected.append(i_node)
+                mapped.append(i_node)
+        for start_node in range(n):
+            if start_node not in mapped:
+                mapped.append(start_node)
+                break
+      
+        while len(connected) < n:
+            for i_map in range(n):
+                if i_map in mapped and i_map not in connected:
+                    break
+            for i_connect in range(i_map + 1, n):
+                if tree[i_map, i_connect] and i_connect not in connected:
+                    mapped.append(i_connect)
+                    connections.append([i_map, i_connect])
+            connected.append(i_map)
+        return connections
+
+    def connecting_nodes(self, connected_nodes, tree):
+        # TODO: Precompute this map.
+        n_vertices = len(connected_nodes)
+        connecting_edges = np.zeros(n_vertices, dtype=int)
+        for i_vertex, vertex in enumerate(connected_nodes):
+            for i_edge in self.facet_edges[vertex[0]]:
+                if i_edge in self.facet_edges[vertex[1]]:
+                    connecting_edges[i_vertex] = i_edge
+                    break
+        return connecting_edges
 
 
-        
+
+
 poly = Polyeder()
 
 poly.project_facets()
 #print(poly.projected_coordinates[:2])
-test_tree = [0, 3, 6, 7, 14, 13]
-for i in range(6):
-    poly.align_facet_edges(i, i + 1, test_tree[i])
+tree = np.zeros((7,7))
+for i in range(0, 6):
+    tree[i, i + 1] = 1
+    tree[i+1, i] = 1
+
+map_order = poly.map_order(tree)
+connection_vertices = poly.connecting_nodes(map_order, tree)
+print('----------')
+print(map_order)
+print(connection_vertices)
+print('----------')
+if True:
+    test_tree = connection_vertices #[0, 3, 6, 7, 14, 13]
+    for i in range(len(test_tree)):
+        poly.align_facet_edges(map_order[i][0], map_order[i][1], test_tree[i])
 
 #print(poly.projected_coordinates[:2])
 fig,ax = plt.subplots()
-for polygon in poly.projected_coordinates:
-    p = Polygon(polygon[:,:2], facecolor = 'b', alpha=0.1, edgecolor='k')
+for ipoly, polygon in enumerate(poly.projected_coordinates):
+    if ipoly == 1 or ipoly == 3 or ipoly == 5 or ipoly == 7:
+        col = 'r'
+    elif ipoly == 2: col = 'g'
+    else: col = 'b'
+
+    p = Polygon(polygon[:,:2], facecolor = col, alpha=0.1, edgecolor='k')
 
 
     ax.add_patch(p)
-    ax.set_xlim([-10, 10])
-    ax.set_ylim([-10, 10])
+    ax.set_xlim([-2, 5])
+    ax.set_ylim([-4, 10])
 
 plt.show()
