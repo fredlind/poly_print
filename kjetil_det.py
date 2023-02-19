@@ -63,7 +63,7 @@ def check_n_of_spanning_trees(adjacency_matrix):
 def find_all_spanning_trees(adjacency_mat, vertices, do_print=0):
     n_trees = check_n_of_spanning_trees(adjacency_mat)
     n_nodes = len(adjacency_mat)
-    spanning_tree_vertices = np.zeros((n_trees, n_nodes - 1))
+    spanning_tree_vertices = np.zeros((n_trees, n_nodes - 1), dtype=int)
     graphs = combinations(np.arange(len(vertices)), n_nodes - 1)
 
     s = 0
@@ -86,6 +86,7 @@ def find_all_spanning_trees(adjacency_mat, vertices, do_print=0):
     return spanning_tree_vertices
 
 def remove_nodes(super_adjacency, super_vertices, nodes_to_remove):
+    #Input original adjacency matrix and the vertices and nodes to remove
     n_remove = len(nodes_to_remove)
     n_super = len(super_adjacency)
 
@@ -107,11 +108,31 @@ def remove_nodes(super_adjacency, super_vertices, nodes_to_remove):
             sub_vertices.append(vertex) 
             sub_to_super_vertex_mapping.append(i_vert) 
 
+    for sub_vertex in sub_vertices:
+        sub_vertex[0] = super_to_sub_node_mapping[sub_vertex[0]]
+        sub_vertex[1] = super_to_sub_node_mapping[sub_vertex[1]]
     print(sub_vertices)
     print(sub_to_super_vertex_mapping)
     #RECOPMPUTE vertex VALUES IN sub_vertices to subvalues
 
     return sub_adjacency, sub_vertices, sub_to_super_node_mapping, super_to_sub_node_mapping
+
+def expand_to_full_size(sub_adjacency, removed_nodes):
+    sorted_nodes = np.sort(removed_nodes)
+    full_adjacency = np.insert(sub_adjacency, sorted_nodes, 0, axis=0)
+    full_adjacency = np.insert(full_adjacency, sorted_nodes, 0, axis=1)
+
+    return full_adjacency
+
+def compute_adjacency_from_vertices(vertex_numbers, vertices):
+    n_nodes = len(vertex_numbers) + 1
+    adjacency_mat = np.zeros((n_nodes, n_nodes), dtype=int)
+    for vertex in vertex_numbers:
+        adjacency_mat[vertices[vertex][0], vertices[vertex][1]] = 1
+        adjacency_mat[vertices[vertex][1], vertices[vertex][0]] = 1
+
+    return adjacency_mat
+
 adjacency_mat, vertices = get_graph_description()
 
 spanning_trees = find_all_spanning_trees(adjacency_mat, vertices, do_print=0)
@@ -119,18 +140,27 @@ spanning_trees = find_all_spanning_trees(adjacency_mat, vertices, do_print=0)
 print(spanning_trees)
 print(len(spanning_trees))
 
-comb_to_remove = get_all_combinations_to_remove(vertices)
+comb_to_remove = get_all_combinations_to_remove(np.arange(len(adjacency_mat)))
 
 #print(comb_to_remove)
 n_combinations_found = 0
 
-remove_nodes(adjacency_mat, vertices, comb_to_remove[1])
+sub_adjacency, sub_vertices, sub_to_super_node_mapping, super_to_sub_node_mapping = remove_nodes(adjacency_mat, vertices, comb_to_remove[1])
 
+sub_spanning_trees = find_all_spanning_trees(sub_adjacency, sub_vertices, do_print=0)
+# This is just the nodes. Must transform to matrix. 
+sub_spanning_adjacencies = []
+for spanning_tree in sub_spanning_trees:
+    sub_spanning_adjacencies.append(compute_adjacency_from_vertices(spanning_tree, sub_vertices))
+
+print(len(sub_spanning_trees))
+full_size_spanning = expand_to_full_size(sub_spanning_adjacencies[0], comb_to_remove[1])
+print(full_size_spanning)
 sys.exit()
 omega = {0, 1, 2, 3, 4, 5, 6}
-for nodes_to_remove in []:#comb_to_remove:
+for nodes_to_remove in comb_to_remove:
     nodes_to_keep = get_complement(nodes_to_remove, omega)
-    subgraph = get_sub_graph(graph_mat, nodes_to_keep)
+    subgraph = get_sub_graph(adjacency_mat, nodes_to_keep)
     laplacian = compute_connections(subgraph)
     matrix=symp.Matrix(laplacian)
     n_spanning_trees = matrix.adjugate()[0,0]
