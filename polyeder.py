@@ -93,7 +93,7 @@ class Polyeder():
         """
 
     def align_facet_edges(self, fixed_facet, facet, common_edge):
-        # 
+        #self.print_coordinates = []
         vertex1, vertex2 = self.edge_vertices[common_edge]
         print(fixed_facet, facet, common_edge,vertex1, vertex2)
         fixed_facet_point1 = self.facet_vertices[fixed_facet].index(vertex1)
@@ -111,8 +111,10 @@ class Polyeder():
 
         r_mat = rot_mat(diff_coord, diff_fixed_coord)
         print(r_mat)
-        self.projected_coordinates[facet] -= coord1
-        self.projected_coordinates[facet] = np.matmul(r_mat, self.projected_coordinates[facet].transpose()).transpose() + fixed_coord1
+        print_coordinates = self.projected_coordinates[facet] - coord1
+        print_coordinates = np.matmul(r_mat, print_coordinates.transpose()).transpose() \
+                                            + fixed_coord1
+        return print_coordinates
 
     def map_order(self, tree):
         n = tree.shape[0]
@@ -150,8 +152,38 @@ class Polyeder():
                     break
         return connecting_edges
 
+    def compute_print_coordinates(self, tree):
+        print_coordinates = []
+        map_order = self.map_order(tree)
+        connection_vertices = self.connecting_nodes(map_order, tree)
+        test_tree = connection_vertices #[0, 3, 6, 7, 14, 13]
+        print_coordinates.append(self.projected_coordinates[map_order[0][0]])
+        for i in range(len(test_tree)):
+            print_coordinates.append(self.align_facet_edges(map_order[i][0], map_order[i][1], test_tree[i]))
 
+        return print_coordinates
 
+    def get_tree_nodes(self, tree):
+        nodes = []
+        for i_node, node in enumerate(tree): 
+            if np.sum(node): nodes.append(i_node)
+
+        return nodes
+    
+    def print_tree(self, nodes,  print_coordinates, colors='b', edgecolor='k', alpha=.5):
+        fig,ax = plt.subplots()
+        n_sides = len(nodes)
+        if len(colors) == 1: colors = [colors for i in range(n_sides)]
+
+        for i_color, i_node in enumerate(nodes):
+            polygon = print_coordinates[i_color]
+            p = Polygon(polygon[:,:2], facecolor = colors[i_color], alpha=alpha, edgecolor=edgecolor)
+        
+            ax.add_patch(p)
+    
+        ax.set_xlim([-4, 5])
+        ax.set_ylim([-4, 5])
+        plt.show()
 
 poly = Polyeder()
 
@@ -161,31 +193,8 @@ tree = np.zeros((7,7))
 for i in range(0, 6):
     tree[i, i + 1] = 1
     tree[i+1, i] = 1
-
-map_order = poly.map_order(tree)
-connection_vertices = poly.connecting_nodes(map_order, tree)
-print('----------')
-print(map_order)
-print(connection_vertices)
-print('----------')
-if True:
-    test_tree = connection_vertices #[0, 3, 6, 7, 14, 13]
-    for i in range(len(test_tree)):
-        poly.align_facet_edges(map_order[i][0], map_order[i][1], test_tree[i])
-
-#print(poly.projected_coordinates[:2])
-fig,ax = plt.subplots()
-for ipoly, polygon in enumerate(poly.projected_coordinates):
-    if ipoly == 1 or ipoly == 3 or ipoly == 5 or ipoly == 7:
-        col = 'r'
-    elif ipoly == 2: col = 'g'
-    else: col = 'b'
-
-    p = Polygon(polygon[:,:2], facecolor = col, alpha=0.1, edgecolor='k')
+print_coordinates = poly.compute_print_coordinates(tree)
+nodes = poly.get_tree_nodes(tree)
+poly.print_tree(nodes, print_coordinates, colors=('b', 'b', 'b', 'y', 'c', 'm', 'r'))
 
 
-    ax.add_patch(p)
-    ax.set_xlim([-2, 5])
-    ax.set_ylim([-4, 10])
-
-plt.show()
