@@ -4,6 +4,7 @@ import sympy as symp
 from itertools import combinations
 import sys
 from kjetils_graph import get_graph_description
+from kjetils_graph import get_verbose_graph_description
 
 def compute_connections(graph_mat):
     #Return the Laplacian matrix from the adjancy matrix
@@ -80,7 +81,7 @@ def find_all_spanning_trees(adjacency_mat, vertices, do_print=0):
             if do_print:
                 print(graph)
         
-        s += is_spanning_tree
+            s += is_spanning_tree
         #if n==5: break
 
     return spanning_tree_vertices
@@ -105,84 +106,109 @@ def remove_nodes(super_adjacency, super_vertices, nodes_to_remove):
         if vertex[0] in nodes_to_remove or vertex[1] in nodes_to_remove:
             continue
         else:
-            sub_vertices.append(vertex) 
+            sub_vertices.append(copy.copy((vertex))) 
             sub_to_super_vertex_mapping.append(i_vert) 
 
     super_coordinates_sub_vertices = copy.copy(sub_vertices)
     for sub_vertex in sub_vertices:
         sub_vertex[0] = super_to_sub_node_mapping[sub_vertex[0]]
         sub_vertex[1] = super_to_sub_node_mapping[sub_vertex[1]]
-    print(sub_vertices)
-    print(sub_to_super_vertex_mapping)
+    #print(sub_vertices)
+    #print(sub_to_super_vertex_mapping)
     #RECOPMPUTE vertex VALUES IN sub_vertices to subvalues
 
     return sub_adjacency, sub_vertices, sub_to_super_node_mapping, super_to_sub_node_mapping, super_coordinates_sub_vertices
 
 def expand_to_full_size(sub_adjacency, removed_nodes):
-    sorted_nodes = np.sort(removed_nodes)
-    full_adjacency = np.insert(sub_adjacency, sorted_nodes, 0, axis=0)
-    full_adjacency = np.insert(full_adjacency, sorted_nodes, 0, axis=1)
+    if len(removed_nodes)==0:
+        return sub_adjacency
+    else:
+        sorted_nodes = np.sort(removed_nodes)
+        if len(removed_nodes)==2 and removed_nodes[1] == 6:
+            print(removed_nodes)
+        
+        full_adjacency = np.insert(sub_adjacency, sorted_nodes[0], 0, axis=0)
+        for i_row in range(1, len(sorted_nodes)):
+            full_adjacency = np.insert(full_adjacency, sorted_nodes[i_row], 0, axis=0)
+        for node in sorted_nodes:
+            full_adjacency = np.insert(full_adjacency, node, 0, axis=1)
 
     return full_adjacency
 
 def compute_adjacency_from_vertices(vertex_numbers, vertices):
     n_nodes = len(vertex_numbers) + 1
     adjacency_mat = np.zeros((n_nodes, n_nodes), dtype=int)
+    if len(vertices)==0:
+        print("line 135-ish: ", vertices )
     for vertex in vertex_numbers:
         adjacency_mat[vertices[vertex][0], vertices[vertex][1]] = 1
         adjacency_mat[vertices[vertex][1], vertices[vertex][0]] = 1
 
     return adjacency_mat
+def adjacencies_with_nodes_removed(adjacency_mat, vertices, comb_to_remove):
+    sub_adjacency, sub_vertices, sub_to_super_node_mapping, super_to_sub_node_mapping, super_coord_sub_vertices = \
+        remove_nodes(adjacency_mat, vertices, comb_to_remove)
 
+    sub_spanning_trees = find_all_spanning_trees(sub_adjacency, sub_vertices, do_print=0)
+    # This is just the nodes. Must transform to matrix. 
+    sub_spanning_adjacencies = []
+    for spanning_tree in sub_spanning_trees:
+        sub_spanning_adjacencies.append(compute_adjacency_from_vertices(spanning_tree, sub_vertices))
+
+    #print(len(sub_spanning_trees))
+    full_size_spanning = []
+    #for i_tree in range(1, len(comb_to_remove)):
+    for i_tree in range(len(sub_spanning_adjacencies)):
+        full_size_spanning.append(expand_to_full_size(sub_spanning_adjacencies[i_tree], comb_to_remove))
+    
+    return full_size_spanning
 #def full_size_vertices(sub_to_super_node_mapping, sub_vertices):
+def test_kjetil():
+    adjacency_mat, vertices = get_verbose_graph_description(0)#get_graph_description()
 
-adjacency_mat, vertices = get_graph_description()
+    #spanning_trees = find_all_spanning_trees(adjacency_mat, vertices, do_print=0)
 
-spanning_trees = find_all_spanning_trees(adjacency_mat, vertices, do_print=0)
+    #print(spanning_trees)
+    #print(len(spanning_trees))
 
-print(spanning_trees)
-print(len(spanning_trees))
+    comb_to_remove = get_all_combinations_to_remove(np.arange(len(adjacency_mat)))
+    comb_to_remove = comb_to_remove[:-7]
 
-comb_to_remove = get_all_combinations_to_remove(np.arange(len(adjacency_mat)))
+    #print(comb_to_remove)
+    #n_combinations_found = 0
+    all_full_spanning_adjacencies = []
+    for comb in comb_to_remove:
+        all_full_spanning_adjacencies.append(adjacencies_with_nodes_removed(adjacency_mat,  vertices, comb))
+    
+    return all_full_spanning_adjacencies
+        #print(full_size_spanning)
 
-#print(comb_to_remove)
-n_combinations_found = 0
+def test_size(comb_to_remove, adjacency_mat):
+    omega = {0, 1, 2, 3, 4, 5, 6}
+    n_combinations_found = 0
+    for nodes_to_remove in comb_to_remove:
+        nodes_to_keep = get_complement(nodes_to_remove, omega)
+        subgraph = get_sub_graph(adjacency_mat, nodes_to_keep)
+        laplacian = compute_connections(subgraph)
+        matrix=symp.Matrix(laplacian)
+        n_spanning_trees = matrix.adjugate()[0,0]
+        print("Nodes:")
+        print(nodes_to_keep)
+        print("No combinations:")
+        print(n_spanning_trees)
+        n_combinations_found += n_spanning_trees
 
-sub_adjacency, sub_vertices, sub_to_super_node_mapping, super_to_sub_node_mapping, super_coord_sub_vertices = remove_nodes(adjacency_mat, vertices, comb_to_remove[1])
+    print("Total combinations: ", n_combinations_found)
 
-sub_spanning_trees = find_all_spanning_trees(sub_adjacency, sub_vertices, do_print=0)
-# This is just the nodes. Must transform to matrix. 
-sub_spanning_adjacencies = []
-for spanning_tree in sub_spanning_trees:
-    sub_spanning_adjacencies.append(compute_adjacency_from_vertices(spanning_tree, sub_vertices))
+    #print(subgraph)
+    #print(graph_mat)
 
-#print(len(sub_spanning_trees))
-
-for i_tree in range(1, len(comb_to_remove)):
-    full_size_spanning = expand_to_full_size(sub_spanning_adjacencies[i_tree], comb_to_remove[i_tree])
-    #print(full_size_spanning)
-
-sys.exit()
-omega = {0, 1, 2, 3, 4, 5, 6}
-for nodes_to_remove in comb_to_remove:
-    nodes_to_keep = get_complement(nodes_to_remove, omega)
-    subgraph = get_sub_graph(adjacency_mat, nodes_to_keep)
-    laplacian = compute_connections(subgraph)
-    matrix=symp.Matrix(laplacian)
-    n_spanning_trees = matrix.adjugate()[0,0]
-    print("Nodes:")
-    print(nodes_to_keep)
-    print("No combinations:")
-    print(n_spanning_trees)
-    n_combinations_found += n_spanning_trees
-
-print("Total combinations: ", n_combinations_found)
-
-#print(subgraph)
-#print(graph_mat)
-
-#mat_mat = mat_mat[:-1]
-#mat_mat = mat_mat[:,:-1]
-#print(mat_mat)
-#mat_det=np.linalg.det(mat_mat)
-#print(mat_det)
+    #mat_mat = mat_mat[:-1]
+    #mat_mat = mat_mat[:,:-1]
+    #print(mat_mat)
+    #mat_det=np.linalg.det(mat_mat)
+    #print(mat_det)
+if False:
+    adj_mat, _ = get_verbose_graph_description(0)
+    comb_to_remove = get_all_combinations_to_remove(np.arange(len(adj_mat)))
+    test_size(comb_to_remove, adj_mat)

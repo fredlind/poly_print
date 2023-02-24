@@ -16,7 +16,15 @@ def rotation_matrix_from_vectors(vec1, vec2, x=1, y=1, z=1):
 
     else:
         if x:
-            return numpy.eye(3) #cross of all zeros only occurs on identical directions
+            
+            if numpy.dot(a, b) < 0:
+                rot = numpy.eye(3)
+                rot[0, 0] = -1
+                rot[1, 1] = -1
+                return rot
+            else:
+                return numpy.eye(3) #cross of all zeros only occurs on identical directions
+
         else:
             rot = numpy.eye(3)
             c = numpy.dot(a, b)
