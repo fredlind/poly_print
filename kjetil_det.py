@@ -124,9 +124,10 @@ def expand_to_full_size(sub_adjacency, removed_nodes):
         return sub_adjacency
     else:
         sorted_nodes = np.sort(removed_nodes)
+        """
         if len(removed_nodes)==2 and removed_nodes[1] == 6:
             print(removed_nodes)
-        
+        """
         full_adjacency = np.insert(sub_adjacency, sorted_nodes[0], 0, axis=0)
         for i_row in range(1, len(sorted_nodes)):
             full_adjacency = np.insert(full_adjacency, sorted_nodes[i_row], 0, axis=0)
@@ -138,8 +139,6 @@ def expand_to_full_size(sub_adjacency, removed_nodes):
 def compute_adjacency_from_vertices(vertex_numbers, vertices):
     n_nodes = len(vertex_numbers) + 1
     adjacency_mat = np.zeros((n_nodes, n_nodes), dtype=int)
-    if len(vertices)==0:
-        print("line 135-ish: ", vertices )
     for vertex in vertex_numbers:
         adjacency_mat[vertices[vertex][0], vertices[vertex][1]] = 1
         adjacency_mat[vertices[vertex][1], vertices[vertex][0]] = 1
@@ -192,10 +191,12 @@ def test_size(comb_to_remove, adjacency_mat):
         laplacian = compute_connections(subgraph)
         matrix=symp.Matrix(laplacian)
         n_spanning_trees = matrix.adjugate()[0,0]
+        
         print("Nodes:")
         print(nodes_to_keep)
         print("No combinations:")
         print(n_spanning_trees)
+        
         n_combinations_found += n_spanning_trees
 
     print("Total combinations: ", n_combinations_found)

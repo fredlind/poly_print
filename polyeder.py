@@ -106,7 +106,7 @@ class Polyeder():
     def align_facet_edges(self, fixed_facet, facet, common_edge, fixed_facet_coords):
         #self.print_coordinates = []
         vertex1, vertex2 = self.edge_vertices[common_edge]
-        print(fixed_facet, facet, common_edge,vertex1, vertex2)
+        #print(fixed_facet, facet, common_edge,vertex1, vertex2)
         fixed_facet_point1 = self.facet_vertices[fixed_facet].index(vertex1)
         fixed_facet_point2 = self.facet_vertices[fixed_facet].index(vertex2)
         facet_point1 = self.facet_vertices[facet].index(vertex1)
@@ -121,7 +121,7 @@ class Polyeder():
         diff_coord = coord2 - coord1
 
         r_mat = rot_mat(diff_coord, diff_fixed_coord)
-        print(r_mat)
+        #print(r_mat)
         print_coordinates = self.projected_coordinates[facet] - coord1
         print_coordinates = np.matmul(r_mat, print_coordinates.transpose()).transpose() + fixed_coord1
         return print_coordinates
@@ -199,15 +199,16 @@ class Polyeder():
         ax.set_xlim([-400, 400])
         ax.set_ylim([-400, 400])
         if save_fig:
-            print(name_base)
-            print(name_rule)
-            print(file_type)
+            #print(name_base)
+            #print(name_rule)
+            #print(file_type)
             file_name = name_base + name_rule + "." + file_type
-            print(file_name)
+            #print(file_name)
             plt.savefig(file_name)
+
         if show_fig:
             plt.show()
-
+        plt.close()
 
 def test_polyeder():
     poly = Polyeder()

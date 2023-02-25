@@ -20,9 +20,10 @@ def zero_one_name_rule(adjacency):
 
 all_adjacency_matrices = kjetil_det.test_kjetil()
 variants_found = 0
-print(len(all_adjacency_matrices))
+#print(len(all_adjacency_matrices))
 found_zeros = 0
 empty_what = 0
+n_printed = 0
 for span_with_nodes_removed in all_adjacency_matrices:
     if len(span_with_nodes_removed)!=0:
         empty_what += 1
@@ -36,5 +37,7 @@ for span_with_nodes_removed in all_adjacency_matrices:
                                     save_fig=True, show_fig=False,
                                     name_base="Images/vertices",
                                     name_rule=name)
+            n_printed += 1
+            print(n_printed, " prints produced.", end="\r")
 
 #print(found_zeros, variants_found, empty_what)
