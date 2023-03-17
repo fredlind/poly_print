@@ -2,6 +2,12 @@ import numpy as np
 import polyeder
 import kjetil_det
 from kjetils_graph import get_verbose_graph_description
+import copy
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib.patches import Polygon
+
+
 
 poly = polyeder.Polyeder()
 poly.project_facets()
@@ -10,6 +16,34 @@ adjacency_mat, vertices = get_verbose_graph_description(0)
 print(vertices)
 print(adjacency_mat)
 """
+def animate_prints(prints, nodes):
+    images = []
+    fig, ax = plt.subplots()
+    n_prints = len(prints)
+    def poly_animate(i):
+    #for print in prints:
+        ax.clear()
+        for i_poly in nodes[i]: #prints[i]:
+            polygon = prints[i][i_poly]
+            p = Polygon(polygon[:,:2], facecolor = 'b',
+                        alpha=.2, edgecolor='k')
+            ax.add_patch(p)
+        
+        ax.set_xlim([-500, 500])
+        ax.set_ylim([-500, 500])
+        ax.axis('equal')
+        #im = ax.set_animated(True)
+        #images.append([im])
+
+    ani = animation.FuncAnimation(fig, poly_animate,
+                                    frames=n_prints,
+                                    interval=100,
+                                    repeat=False)
+                                    #blit=True,
+                                    #repeat_delay=1000)
+    ani.save('kjetil_art.gif', writer='imagemagick')
+    #plt.show()
+
 #spanning_trees = kjetil_det.find_all_spanning_trees(adjacency_mat, vertices, do_print=0)
 def zero_one_name_rule(adjacency):
     rule=""
@@ -17,6 +51,12 @@ def zero_one_name_rule(adjacency):
         for num in row:
             rule += str(num)
     return rule
+
+do_animate = True
+do_plot = False
+if do_animate:
+    all_print_coordinates = []
+    all_nodes = []
 
 all_adjacency_matrices = kjetil_det.test_kjetil()
 variants_found = 0
@@ -31,13 +71,21 @@ for span_with_nodes_removed in all_adjacency_matrices:
             print_coordinates = poly.compute_print_coordinates(spanning_matrix)
 
             nodes = poly.get_tree_nodes(spanning_matrix)
+            if do_animate:
+                all_print_coordinates.append(copy.copy(print_coordinates))
+                all_nodes.append(nodes)
             name = zero_one_name_rule(spanning_matrix)
-            poly.print_tree(nodes, print_coordinates,
+            if do_plot:
+                poly.print_tree(nodes, print_coordinates,
                             colors=('b', 'b', 'y', 'y', 'c', 'c', 'r'),
                                     save_fig=True, show_fig=False,
                                     name_base="Images/vertices",
                                     name_rule=name)
             n_printed += 1
             print(n_printed, " prints produced.", end="\r")
+
+if  do_animate:
+    animate_prints(all_print_coordinates, all_nodes)
+
 
 #print(found_zeros, variants_found, empty_what)

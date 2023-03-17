@@ -3,6 +3,7 @@ from scipy.spatial.transform import Rotation
 from geometry import rotation_matrix_from_vectors as rot_mat
 from copy import copy
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from matplotlib.patches import Polygon
 
 class Polyeder():
@@ -183,8 +184,9 @@ class Polyeder():
     
     def print_tree(self, nodes,  print_coordinates,
                    colors='b', edgecolor='k',
-                   alpha=.5, save_fig=False, show_fig=True,
-                   name_base="fig", name_rule="", file_type="pdf"):
+                   alpha=.5, save_fig=False, show_fig=True, animate=False,
+                   name_base="fig", name_rule="", file_type="pdf",
+                   animation_filetype="mpeg"):
         fig, ax = plt.subplots()
         n_sides = len(nodes)
         if len(colors) == 1: colors = [colors for i in range(n_sides)]
@@ -206,9 +208,16 @@ class Polyeder():
             #print(file_name)
             plt.savefig(file_name)
 
+        if animate:
+            ...
+
+
         if show_fig:
             plt.show()
         plt.close()
+
+def animate():
+    ...
 
 def test_polyeder():
     poly = Polyeder()
