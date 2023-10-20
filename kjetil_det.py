@@ -179,7 +179,7 @@ def test_kjetil():
     for comb in comb_to_remove:
         all_full_spanning_adjacencies.append(adjacencies_with_nodes_removed(adjacency_mat,  vertices, comb))
     
-    return all_full_spanning_adjacencies
+    return all_full_spanning_adjacencies, adjacency_mat
         #print(full_size_spanning)
 
 def test_size(comb_to_remove, adjacency_mat):

@@ -186,7 +186,7 @@ class Polyeder():
                    colors='b', edgecolor='k',
                    alpha=.5, save_fig=False, show_fig=True, animate=False,
                    name_base="fig", name_rule="", file_type="pdf",
-                   animation_filetype="mpeg"):
+                   animation_filetype="mpeg", fig_title=''):
         fig, ax = plt.subplots()
         n_sides = len(nodes)
         if len(colors) == 1: colors = [colors for i in range(n_sides)]
@@ -197,9 +197,14 @@ class Polyeder():
                         alpha=alpha, edgecolor=edgecolor)
         
             ax.add_patch(p)
-    
-        ax.set_xlim([-400, 400])
-        ax.set_ylim([-400, 400])
+        ax_lim = 500
+        xlim = [-ax_lim, ax_lim]
+        ylim = xlim
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        ax.axis('equal')
+        ax.set_axis_off()
+        plt.title(fig_title)
         if save_fig:
             #print(name_base)
             #print(name_rule)
