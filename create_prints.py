@@ -16,7 +16,7 @@ adjacency_mat, vertices = get_verbose_graph_description(0)
 print(vertices)
 print(adjacency_mat)
 """
-def animate_prints(prints, nodes):
+def animate_prints(prints, nodes, facecolors='b', alpha=.2, edgecolor='k'):
     images = []
     fig, ax = plt.subplots()
     plt.axis('off')
@@ -29,8 +29,15 @@ def animate_prints(prints, nodes):
         ax.clear()
         for i_poly in nodes[i]: #prints[i]:
             polygon = prints[i][i_poly]
-            p = Polygon(polygon[:,:2], facecolor = 'b',
-                        alpha=.2, edgecolor='k')
+            if hasattr(facecolors, "__len__"):
+                if len(facecolors) == 1: facecolor = facecolors
+                else:
+                    print(facecolors, i_poly)
+                    facecolor = facecolors[i_poly]
+            else: facecolor = facecolors
+
+            p = Polygon(polygon[:,:2], facecolor = facecolor,
+                        alpha=alpha, edgecolor=edgecolor)
             ax.add_patch(p)
 
         ax.axis('equal')
@@ -58,8 +65,8 @@ def zero_one_name_rule(adjacency, full_adjacency):
                 rule += str(row[i_col])
     return rule
 
-do_animate = True #False #
-do_plot = True #False
+from settings import *
+
 if do_animate:
     all_print_coordinates = []
     all_nodes = []
@@ -84,12 +91,14 @@ for span_with_nodes_removed in all_adjacency_matrices:
             #name = str(int(name, 2))
             if do_plot:
                 poly.print_tree(nodes, print_coordinates,
-                            colors=('lightsteelblue', 'purple', 'navy', 'blue', 'mediumslateblue', 'darkorchid', 'thistle'), # 'y', 'y', 'c', 'c', 'r'),
-                                    save_fig=True, show_fig=False,
-                                    name_base="Images/vertices",
-                                    name_rule=name + "_" + str(n_printed + 1), fig_title="Image " + str(n_printed + 1) + ", Nodes: " + name)
+                                colors=colors,
+                                save_fig=True, show_fig=False,
+                                name_base="Images/vertices",
+                                name_rule=name + "_" + str(n_printed + 1),
+                                fig_title="Image " + str(n_printed + 1) + ", Nodes: " + name)
             n_printed += 1
-            print(n_printed, " prints produced.", end="\r")
+            if verbose:
+                print(n_printed, " prints produced.", end="\r")
 
 if  do_animate:
     animate_prints(all_print_coordinates, all_nodes)

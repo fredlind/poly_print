@@ -251,5 +251,3 @@ def test_polyeder():
     print_coordinates = poly.compute_print_coordinates(tree)
     nodes = poly.get_tree_nodes(tree)
     poly.print_tree(nodes, print_coordinates, colors=('b', 'b', 'y', 'y', 'c', 'm', 'r'))
-
-
