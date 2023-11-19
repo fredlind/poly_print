@@ -186,8 +186,11 @@ class Polyeder():
                    colors='b', edgecolor='k',
                    alpha=.5, save_fig=False, show_fig=True, animate=False,
                    name_base="fig", name_rule="", file_type="pdf",
-                   animation_filetype="mpeg", fig_title=''):
-        fig, ax = plt.subplots()
+                   animation_filetype="mpeg", fig_title='', fig=None, ax=None,
+                   text_position=-.25):
+        if ax is None:
+            fig, ax = plt.subplots()
+        
         n_sides = len(nodes)
         if len(colors) == 1: colors = [colors for i in range(n_sides)]
 
@@ -204,22 +207,23 @@ class Polyeder():
         ax.set_ylim(ylim)
         ax.axis('equal')
         ax.set_axis_off()
-        plt.title(fig_title)
-        if save_fig:
+        ax.set_title(fig_title, y=text_position)
+        #plt.title(fig_title)
+        # if save_fig:
             #print(name_base)
             #print(name_rule)
             #print(file_type)
-            file_name = name_base + name_rule + "." + file_type
+            #file_name = name_base + name_rule + "." + file_type
             #print(file_name)
-            plt.savefig(file_name)
+            #plt.savefig(file_name)
 
         if animate:
             ...
 
 
-        if show_fig:
-            plt.show()
-        plt.close()
+        #if show_fig:
+        #    plt.show()
+        #plt.close()
 
 def animate():
     ...
